@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Faculty Substitution Planner</title>
+  <link rel="stylesheet" href="styles.css?v=7" />
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <h1>Faculty Substitution Planner</h1>
+      <p class="subtitle">Upload the faculty timetable, mark who is absent or engaged, and find the least-loaded colleagues to take their lectures.</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>1. Upload faculty timetable (PDF)</h2>
+      <label id="dropZone" class="drop-zone">
+        <input type="file" id="pdfInput" accept="application/pdf,.pdf" hidden />
+        <strong>Click to choose a PDF</strong> or drag &amp; drop it here
+        <span class="muted">One or more faculty timetables per page · days as rows or columns · break/lunch columns are skipped</span>
+      </label>
+      <p id="uploadStatus" class="hint"></p>
+    </section>
+
+    <section class="card">
+      <h2>2. Select day &amp; unavailable faculty</h2>
+      <div class="controls">
+        <label class="field">
+          <span>Date</span>
+          <input type="date" id="dateInput" />
+        </label>
+        <div class="field">
+          <span>Day</span>
+          <strong id="dayLabel" class="day-label"></strong>
+        </div>
+      </div>
+
+      <div class="picker">
+        <div class="picker-head">
+          <input type="search" id="facultySearch" placeholder="Search by name, employee code or department…" />
+          <button id="selectNoneBtn" class="btn small">Clear selection</button>
+        </div>
+        <div id="facultyChecklist" class="checklist"></div>
+        <div class="picker-actions">
+          <span id="selectedCount" class="muted"></span>
+          <select id="reasonSelect" aria-label="Reason"></select>
+          <button id="markSelectedBtn" class="btn primary">Mark selected</button>
+        </div>
+      </div>
+
+      <div id="absentChips" class="chips"></div>
+
+      <details class="settings">
+        <summary>Criteria</summary>
+        <div class="controls">
+          <label class="field">
+            <span>Max lectures on the day</span>
+            <input type="number" id="maxDayLoad" min="0" max="12" />
+          </label>
+          <label class="field">
+            <span>Max weekly load (blank = no limit)</span>
+            <input type="number" id="maxWeeklyLoad" min="0" placeholder="No limit" />
+          </label>
+          <label class="field">
+            <span>Periods per day</span>
+            <input type="number" id="periodsPerDay" min="1" max="12" />
+          </label>
+        </div>
+        <p class="hint">Eligible substitutes have at most the max lectures on the selected day (including adjustments already assigned) and are free in that period. They're ranked by that day's load first, then by weekly load.</p>
+      </details>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>3. Lectures to adjust</h2>
+        <div class="inline">
+          <button id="autoAssignBtn" class="btn primary">Auto-assign best substitutes</button>
+          <button id="clearSelectedBtn" class="btn">Clear selected</button>
+          <button id="clearAllBtn" class="btn danger">Clear all</button>
+        </div>
+      </div>
+      <div id="adjustments"></div>
+    </section>
+
+    <section class="card">
+      <h2>4. Available substitutes <span id="dayLabel2" class="muted"></span></h2>
+      <div id="substitutes"></div>
+      <details id="unavailableWrap" class="unavailable">
+        <summary id="unavailableSummary"></summary>
+        <div id="unavailable"></div>
+      </details>
+    </section>
+
+    <section class="card" id="scheduleCard">
+      <div class="card-head no-print">
+        <h2>5. Adjustment schedule</h2>
+        <div class="inline">
+          <button id="printScheduleBtn" class="btn">Print / Save PDF</button>
+          <button id="excelScheduleBtn" class="btn">Download Excel</button>
+          <button id="imageScheduleBtn" class="btn">Download image</button>
+          <button id="copyScheduleBtn" class="btn primary">Copy image</button>
+        </div>
+      </div>
+      <div id="schedule"></div>
+      <p id="scheduleNote" class="hint no-print"></p>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Faculty &amp; timetables</h2>
+        <div class="inline">
+          <button id="addFacultyBtn" class="btn primary">Add faculty</button>
+          <button id="exportBtn" class="btn">Export backup</button>
+          <label class="btn">Import backup<input type="file" id="importInput" accept="application/json" hidden /></label>
+          <button id="resetBtn" class="btn danger">Reset sample data</button>
+        </div>
+      </div>
+      <div id="facultyTable"></div>
+    </section>
+  </main>
+
+  <dialog id="facultyDialog">
+    <form method="dialog" id="facultyForm">
+      <h2 id="dialogTitle">Edit faculty</h2>
+      <div class="controls">
+        <label class="field grow">
+          <span>Name</span>
+          <input type="text" id="fName" required />
+        </label>
+        <label class="field">
+          <span>Department</span>
+          <input type="text" id="fDept" />
+        </label>
+      </div>
+      <p class="hint">Type the class/subject in each period that has a lecture. Leave blank for a free period.</p>
+      <div class="grid-wrap"><table class="tt-grid" id="ttGrid"></table></div>
+      <div class="dialog-actions">
+        <button type="button" id="cancelDialog" class="btn">Cancel</button>
+        <button type="submit" class="btn primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="reviewDialog" class="wide">
+    <h2>Review imported timetable</h2>
+    <p id="reviewSummary"></p>
+    <ul id="reviewWarnings" class="warnings"></ul>
+    <div class="grid-wrap"><div id="reviewTable"></div></div>
+    <div class="dialog-actions spread">
+      <div class="inline">
+        <label class="radio"><input type="radio" name="importMode" value="replace" checked /> Replace all faculty</label>
+        <label class="radio"><input type="radio" name="importMode" value="merge" /> Add / update by name</label>
+      </div>
+      <div class="inline">
+        <button type="button" id="cancelReview" class="btn">Cancel</button>
+        <button type="button" id="confirmReview" class="btn primary">Import</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="vendor/pdf.min.js"></script>
+  <script src="vendor/pdf.worker.min.js"></script>
+  <script src="logic.js?v=7"></script>
+  <script src="data.js?v=7"></script>
+  <script src="pdf-import.js?v=7"></script>
+  <script src="app.js?v=7"></script>
+</body>
+</html>
