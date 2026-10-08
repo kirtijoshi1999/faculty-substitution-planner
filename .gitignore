@@ -1,0 +1,5 @@
+node_modules/
+website/
+.DS_Store
+# Real timetables contain staff names and employee codes; keep them out of the public repo.
+tools/fixtures/real*.pdf

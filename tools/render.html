@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<!-- Debug helper: render.html?file=fixtures/real.pdf&page=14 (serve the project root over http) -->
+<html>
+<body style="margin:0;background:#fff">
+  <canvas id="c"></canvas>
+  <script src="../vendor/pdf.min.js"></script>
+  <script src="../vendor/pdf.worker.min.js"></script>
+  <script>
+    (async () => {
+      const q = new URLSearchParams(location.search);
+      const doc = await pdfjsLib.getDocument(q.get('file')).promise;
+      const page = await doc.getPage(Number(q.get('page') || 1));
+      const viewport = page.getViewport({ scale: Number(q.get('scale') || 1.15) });
+      const canvas = document.getElementById('c');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+      document.title = 'rendered';
+    })();
+  </script>
+</body>
+</html>

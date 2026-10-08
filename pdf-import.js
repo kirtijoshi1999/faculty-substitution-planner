@@ -142,7 +142,7 @@
    * Parses one table whose day labels run down the left edge.
    * `items` and `days` must already be in that orientation (see swap()).
    */
-  function parseRowsTable(items, days, lineTol) {
+  function parseRowsTable(items, days, lineTol, kind) {
     const centers = days.map(cy);
     const pitch = median(centers.slice(1).map((c, i) => c - centers[i])) || 40;
     const rows = days.map((d, i) => ({
@@ -198,7 +198,8 @@
       if (neighbour && !BREAK_RE.test(neighbour.label) && !BREAK_RE.test(cols[i].label)) {
         const spacing = Math.abs(neighbour.center - cols[i].center);
         const boundary = (neighbour.center + cols[i].center) / 2;
-        if (Math.abs(cx(it) - boundary) < 0.12 * spacing) return [cols[i], neighbour];
+        // Small fragments (e.g. a wrapped ")") near a border are not centred merged-cell text.
+        if (it.w >= 0.2 * spacing && Math.abs(cx(it) - boundary) < 0.12 * spacing) return [cols[i], neighbour];
       }
       return [cols[i]];
     };
@@ -251,8 +252,13 @@
         if (!parts) return;
         let label = clean([...parts].sort(readingOrder).map((i) => i.str).join(' '));
         if (!label || EMPTY_CELL_RE.test(label)) return;
-        const detail = describeCell(parts);
-        if (detail.className) label = [detail.subject, detail.className, detail.room].filter(Boolean).join(' · ');
+        const detail = describeCell(parts, kind);
+        if (detail.className || detail.subject) {
+          const order = kind === 'room' ? ['className', 'subject', 'teacher']
+            : kind === 'section' ? ['subject', 'room', 'teacher']
+            : ['subject', 'className', 'room'];
+          label = order.map((k) => detail[k]).filter(Boolean).join(' · ') || label;
+        }
         schedule[row.day].push({ period: idx + 1, label, ...detail });
       });
     }
@@ -265,12 +271,40 @@
     };
   }
 
+  const uniq = (xs) => [...new Set(xs.filter(Boolean))];
+  const isRoom = (s) => ROOM_RE.test(s.toUpperCase());
+
+  function joinClasses(big) {
+    const classes = [];
+    for (const s of big) {
+      if (!classes.length || BATCH_START_RE.test(s)) classes.push(s);
+      else classes[classes.length - 1] += s;
+    }
+    // Combined sections are written "25BBD-601/25BBD-602/".
+    return uniq(classes.flatMap((c) => c.split(/\s*[\/,]\s*/)));
+  }
+
+  // "FoA Dr. Fariha" / "BFIndu E20596" / "FoHRRajwinder": subject and teacher in one text run.
+  const cleanTeacher = (s) =>
+    clean(s.replace(/\(?\s*\b[A-Z]?\d{4,}\b\s*\)?/gi, ' ').replace(/[()]/g, ' '));
+
+  function splitSubjectTeacher(s) {
+    const spaced = s.match(/^(\S+)\s+(.+)$/);
+    if (spaced && cleanTeacher(spaced[2])) return [spaced[1], spaced[2]];
+    const first = spaced ? spaced[1] : s;
+    const glued = first.match(/^([A-Z][A-Za-z&]*?[A-Z])([A-Z][a-z].*)$/);
+    return glued ? [glued[1], glued[2] + (spaced ? ' ' + spaced[2] : '')] : [s, ''];
+  }
+
   /**
-   * Splits a cell into subject / class / room when it uses two font sizes, as aSc Timetables does:
-   * small "Subject  Room" on top, the class code in large text (wrapped over lines), and an
-   * optional small "Group 1". Returns {} for cells without that structure.
+   * Splits an aSc Timetables cell (two font sizes) into fields. Which text is which depends on the
+   * kind of timetable:
+   *   faculty: small "Subject  Room", large class code (wrapped over lines), optional "Group 1"
+   *   room:    small "Subject  Teacher", large class code
+   *   section: large subject (wrapped), small "Room  Teacher", optional "Group 1"
+   * Returns {} for cells without that structure.
    */
-  function describeCell(parts) {
+  function describeCell(parts, kind = 'faculty') {
     const heights = parts.map((i) => (i.orig || i).h);
     const maxH = Math.max(...heights);
     if (maxH / Math.min(...heights) < 1.4) return {};
@@ -279,23 +313,39 @@
       const s = i.str.trim();
       if ((i.orig || i).h >= 0.75 * maxH) { big.push(s); continue; }
       // "CLaBE D8-508" / "CEaRMD8-611": subject and room in one text run.
-      const m = !ROOM_RE.test(s) && s.match(TRAILING_ROOM_RE);
+      const m = !isRoom(s) && s.match(TRAILING_ROOM_RE);
       if (m && m[1]) small.push(m[1], m[2]);
       else small.push(s);
     }
-
-    const classes = [];
-    for (const s of big) {
-      if (!classes.length || BATCH_START_RE.test(s)) classes.push(s);
-      else classes[classes.length - 1] += s;
-    }
-    const uniq = (xs) => [...new Set(xs)];
-    const rooms = uniq(small.filter((s) => ROOM_RE.test(s)));
+    const rooms = uniq(small.filter(isRoom).map((s) => s.toUpperCase()));
     const groups = uniq(small.filter((s) => GROUP_RE.test(s)));
-    const subjects = uniq(small.filter((s) => !ROOM_RE.test(s) && !GROUP_RE.test(s)));
-    let className = uniq(classes).join(', ');
-    if (groups.length) className += ` (${groups.join(', ')})`;
-    return { subject: subjects.join(' / '), className, room: rooms.join(', ') };
+    const rest = small.filter((s) => !isRoom(s) && !GROUP_RE.test(s));
+    const withGroups = (s) => (groups.length ? `${s} (${groups.join(', ')})` : s);
+
+    if (kind === 'room') {
+      const [subject, firstTeacher] = rest.length ? splitSubjectTeacher(rest[0]) : ['', ''];
+      const teacher = cleanTeacher([firstTeacher, ...rest.slice(1)].join(' '));
+      return { subject, className: withGroups(joinClasses(big).join(', ')), teacher };
+    }
+    if (kind === 'section') {
+      // Wrapped subject names continue with single letters ("PoM" + "E" = "PoME").
+      const subjects = [];
+      for (const s of big) {
+        if (subjects.length && s.length === 1) subjects[subjects.length - 1] += s;
+        else subjects.push(s);
+      }
+      return {
+        subject: uniq(subjects).join(' / '),
+        room: rooms.join(', '),
+        teacher: cleanTeacher(rest.join(', ')),
+        group: groups.join(', '),
+      };
+    }
+    return {
+      subject: uniq(rest).join(' / '),
+      className: withGroups(joinClasses(big).join(', ')),
+      room: rooms.join(', '),
+    };
   }
 
   /**
@@ -368,7 +418,7 @@
    * pages: [{ page, items: [{ str, x, y, w, h }] }] in top-down page coordinates.
    * Returns { faculty, periods, periodLabels, warnings }.
    */
-  function parseTimetablePages(pages) {
+  function parseTimetablePages(pages, { kind = 'faculty' } = {}) {
     const found = [];
     const warnings = [];
     let periodLabels = [];
@@ -392,7 +442,7 @@
       const tables = axes.map((axis) => {
         const oriented = axis.orientation === 'rows' ? items : items.map(swap);
         const days = axis.orientation === 'rows' ? axis.days : axis.days.map(swap);
-        const parsed = parseRowsTable(oriented, days, lineTol);
+        const parsed = parseRowsTable(oriented, days, lineTol, kind);
         // Bounds back in page coordinates (top edge of the table) for locating the heading above it.
         const top = axis.orientation === 'rows' ? parsed.bounds.top : Math.min(...axis.days.map((d) => d.y));
         const bottom =
@@ -407,13 +457,21 @@
       tables.forEach((t, idx) => {
         const regionTop = idx === 0 ? -Infinity : tables[idx - 1].bottom;
         const heading = pageLines.filter((l) => l.cy > regionTop && l.cy < t.top);
-        let { name, department, code } = findIdentity(heading);
-        if (!name && tables.length === 1) {
-          ({ name, department, code } = findIdentity(pageLines.filter((l) => l.cy > t.bottom)));
+        let name = '', department = '', code = '';
+        if (kind === 'faculty') {
+          ({ name, department, code } = findIdentity(heading));
+          if (!name && tables.length === 1) {
+            ({ name, department, code } = findIdentity(pageLines.filter((l) => l.cy > t.bottom)));
+          }
+        } else {
+          // Room / section timetables are titled with just the room or section code in large text.
+          const title = [...heading].sort((a, b) => b.bottom - b.top - (a.bottom - a.top))[0];
+          name = title ? clean(title.text).toUpperCase() : '';
         }
         const count = DAYS.reduce((n, d) => n + t.schedule[d].length, 0);
         const where = tables.length > 1 ? `Page ${page.page}, table ${idx + 1}` : `Page ${page.page}`;
-        if (!name) warnings.push(`${where}: faculty name not found — please type it in.`);
+        const what = { faculty: 'faculty name', room: 'room name', section: 'section name' }[kind];
+        if (!name) warnings.push(`${where}: ${what} not found — please type it in.`);
         if (count === 0) warnings.push(`${where}${name ? ` (${name})` : ''}: no lectures detected.`);
         if (t.breakText.length) {
           warnings.push(`${where}${name ? ` (${name})` : ''}: ignored text in break columns: ${t.breakText.join(', ')}.`);
@@ -427,7 +485,8 @@
     const byName = new Map();
     const faculty = [];
     for (const f of found) {
-      const key = f.code ? 'code:' + f.code.toUpperCase() : normalizeName(f.name);
+      const key =
+        kind !== 'faculty' ? f.name.toUpperCase() : f.code ? 'code:' + f.code.toUpperCase() : normalizeName(f.name);
       const existing = key && byName.get(key);
       if (existing) {
         for (const d of DAYS) {
@@ -490,11 +549,12 @@
     return pages;
   }
 
-  async function importTimetablePdf(data, pdfjsLib) {
-    return parseTimetablePages(await extractPages(data, pdfjsLib));
+  /** opts.kind: 'faculty' (default), 'room' or 'section' — see describeCell. */
+  async function importTimetablePdf(data, pdfjsLib, opts) {
+    return parseTimetablePages(await extractPages(data, pdfjsLib), opts);
   }
 
-  const api = { parseTimetablePages, extractPages, importTimetablePdf, normalizeName, describeLabel };
+  const api = { parseTimetablePages, extractPages, importTimetablePdf, normalizeName, describeLabel, periodTime };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.PdfImport = api;
 })(this);

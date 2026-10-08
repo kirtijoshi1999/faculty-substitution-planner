@@ -1,0 +1,968 @@
+[
+  {
+    "name": "Dr. Anita Sharma",
+    "department": "CSE",
+    "schedule": {
+      "Mon": [
+        {
+          "period": 1,
+          "label": "FE-A DBMS"
+        },
+        {
+          "period": 2,
+          "label": "SE-A DBMS"
+        },
+        {
+          "period": 3,
+          "label": "TE-B Data Structures"
+        },
+        {
+          "period": 4,
+          "label": "SE-A Data Structures"
+        }
+      ],
+      "Tue": [
+        {
+          "period": 3,
+          "label": "SE-A DBMS"
+        },
+        {
+          "period": 5,
+          "label": "BE-A DBMS Lab"
+        },
+        {
+          "period": 6,
+          "label": "BE-A DBMS Lab"
+        },
+        {
+          "period": 8,
+          "label": "TE-A DBMS"
+        }
+      ],
+      "Wed": [
+        {
+          "period": 1,
+          "label": "FE-A DBMS"
+        },
+        {
+          "period": 2,
+          "label": "BE-B DBMS"
+        },
+        {
+          "period": 6,
+          "label": "SE-A DBMS"
+        },
+        {
+          "period": 7,
+          "label": "TE-B Data Structures"
+        },
+        {
+          "period": 8,
+          "label": "BE-A Data Structures"
+        }
+      ],
+      "Thu": [
+        {
+          "period": 7,
+          "label": "BE-B Data Structures"
+        },
+        {
+          "period": 8,
+          "label": "SE-B DBMS"
+        }
+      ],
+      "Fri": [
+        {
+          "period": 2,
+          "label": "SE-A DBMS"
+        },
+        {
+          "period": 3,
+          "label": "SE-A Data Structures"
+        },
+        {
+          "period": 4,
+          "label": "BE-A Data Structures"
+        },
+        {
+          "period": 8,
+          "label": "FE-A Data Structures"
+        }
+      ],
+      "Sat": [
+        {
+          "period": 8,
+          "label": "BE-B DBMS"
+        }
+      ]
+    }
+  },
+  {
+    "name": "Prof. Rajesh Kumar",
+    "department": "CSE",
+    "schedule": {
+      "Mon": [
+        {
+          "period": 2,
+          "label": "FE-B Networks"
+        },
+        {
+          "period": 4,
+          "label": "FE-A Operating Systems"
+        }
+      ],
+      "Tue": [
+        {
+          "period": 2,
+          "label": "FE-B Networks"
+        },
+        {
+          "period": 4,
+          "label": "FE-B Operating Systems"
+        },
+        {
+          "period": 5,
+          "label": "SE-B Operating Systems"
+        },
+        {
+          "period": 6,
+          "label": "BE-A Operating Systems"
+        }
+      ],
+      "Wed": [
+        {
+          "period": 5,
+          "label": "SE-B Operating Systems"
+        },
+        {
+          "period": 6,
+          "label": "SE-B Networks"
+        },
+        {
+          "period": 7,
+          "label": "TE-B Networks"
+        }
+      ],
+      "Thu": [
+        {
+          "period": 1,
+          "label": "SE-B Operating Systems"
+        },
+        {
+          "period": 2,
+          "label": "FE-A Operating Systems"
+        },
+        {
+          "period": 3,
+          "label": "TE-B Operating Systems"
+        },
+        {
+          "period": 5,
+          "label": "BE-A Networks"
+        }
+      ],
+      "Fri": [
+        {
+          "period": 5,
+          "label": "BE-A Operating Systems"
+        },
+        {
+          "period": 8,
+          "label": "SE-A Networks"
+        }
+      ],
+      "Sat": [
+        {
+          "period": 5,
+          "label": "TE-B Operating Systems"
+        },
+        {
+          "period": 8,
+          "label": "TE-B Operating Systems"
+        }
+      ]
+    }
+  },
+  {
+    "name": "Dr. Meera Iyer",
+    "department": "ECE",
+    "schedule": {
+      "Mon": [
+        {
+          "period": 1,
+          "label": "SE-A VLSI"
+        },
+        {
+          "period": 4,
+          "label": "FE-B Signals"
+        },
+        {
+          "period": 5,
+          "label": "FE-B VLSI"
+        }
+      ],
+      "Tue": [
+        {
+          "period": 3,
+          "label": "BE-B Signals"
+        },
+        {
+          "period": 4,
+          "label": "BE-B VLSI"
+        }
+      ],
+      "Wed": [
+        {
+          "period": 2,
+          "label": "TE-A VLSI"
+        },
+        {
+          "period": 3,
+          "label": "FE-B Signals"
+        }
+      ],
+      "Thu": [
+        {
+          "period": 1,
+          "label": "BE-B Signals"
+        },
+        {
+          "period": 2,
+          "label": "BE-B Signals"
+        },
+        {
+          "period": 3,
+          "label": "BE-A Signals"
+        }
+      ],
+      "Fri": [
+        {
+          "period": 5,
+          "label": "BE-A VLSI"
+        },
+        {
+          "period": 7,
+          "label": "FE-B VLSI"
+        },
+        {
+          "period": 8,
+          "label": "SE-A Signals"
+        }
+      ],
+      "Sat": []
+    }
+  },
+  {
+    "name": "Prof. Vikram Singh",
+    "department": "ME",
+    "schedule": {
+      "Mon": [
+        {
+          "period": 2,
+          "label": "FE-A Fluid Mechanics"
+        },
+        {
+          "period": 3,
+          "label": "SE-A Fluid Mechanics"
+        },
+        {
+          "period": 5,
+          "label": "TE-B Thermodynamics"
+        },
+        {
+          "period": 6,
+          "label": "TE-B Thermodynamics"
+        },
+        {
+          "period": 8,
+          "label": "BE-A Fluid Mechanics"
+        }
+      ],
+      "Tue": [
+        {
+          "period": 1,
+          "label": "BE-B Fluid Mechanics"
+        },
+        {
+          "period": 6,
+          "label": "SE-A Thermodynamics"
+        },
+        {
+          "period": 7,
+          "label": "BE-A Fluid Mechanics"
+        },
+        {
+          "period": 8,
+          "label": "BE-B Thermodynamics"
+        }
+      ],
+      "Wed": [
+        {
+          "period": 3,
+          "label": "SE-A Fluid Mechanics"
+        },
+        {
+          "period": 4,
+          "label": "BE-B Thermodynamics"
+        },
+        {
+          "period": 5,
+          "label": "BE-A Fluid Mechanics"
+        },
+        {
+          "period": 8,
+          "label": "FE-A Fluid Mechanics"
+        }
+      ],
+      "Thu": [
+        {
+          "period": 1,
+          "label": "BE-A Fluid Mechanics"
+        },
+        {
+          "period": 2,
+          "label": "BE-B Thermodynamics"
+        },
+        {
+          "period": 3,
+          "label": "TE-A Fluid Mechanics"
+        },
+        {
+          "period": 6,
+          "label": "TE-A Thermodynamics"
+        },
+        {
+          "period": 8,
+          "label": "FE-B Thermodynamics"
+        }
+      ],
+      "Fri": [
+        {
+          "period": 1,
+          "label": "FE-B Thermodynamics"
+        },
+        {
+          "period": 3,
+          "label": "SE-A Thermodynamics"
+        },
+        {
+          "period": 8,
+          "label": "FE-B Thermodynamics"
+        }
+      ],
+      "Sat": [
+        {
+          "period": 3,
+          "label": "TE-A Fluid Mechanics"
+        },
+        {
+          "period": 4,
+          "label": "BE-A Fluid Mechanics"
+        }
+      ]
+    }
+  },
+  {
+    "name": "Dr. Priya Nair",
+    "department": "Mathematics",
+    "schedule": {
+      "Mon": [
+        {
+          "period": 7,
+          "label": "FE-A Linear Algebra"
+        }
+      ],
+      "Tue": [
+        {
+          "period": 2,
+          "label": "TE-A Calculus"
+        },
+        {
+          "period": 3,
+          "label": "TE-B Linear Algebra"
+        }
+      ],
+      "Wed": [
+        {
+          "period": 1,
+          "label": "BE-B Linear Algebra"
+        }
+      ],
+      "Thu": [
+        {
+          "period": 3,
+          "label": "SE-B Calculus"
+        },
+        {
+          "period": 8,
+          "label": "FE-B Calculus"
+        }
+      ],
+      "Fri": [
+        {
+          "period": 1,
+          "label": "TE-A Linear Algebra"
+        },
+        {
+          "period": 2,
+          "label": "TE-A Linear Algebra"
+        }
+      ],
+      "Sat": [
+        {
+          "period": 8,
+          "label": "BE-B Linear Algebra"
+        }
+      ]
+    }
+  },
+  {
+    "name": "Prof. Sanjay Gupta",
+    "department": "Physics",
+    "schedule": {
+      "Mon": [
+        {
+          "period": 2,
+          "label": "FE-B Optics"
+        },
+        {
+          "period": 3,
+          "label": "BE-B Applied Physics"
+        },
+        {
+          "period": 6,
+          "label": "TE-B Applied Physics"
+        }
+      ],
+      "Tue": [
+        {
+          "period": 2,
+          "label": "BE-A Applied Physics"
+        },
+        {
+          "period": 4,
+          "label": "BE-A Applied Physics"
+        },
+        {
+          "period": 7,
+          "label": "SE-A Optics"
+        }
+      ],
+      "Wed": [
+        {
+          "period": 4,
+          "label": "TE-B Optics"
+        },
+        {
+          "period": 7,
+          "label": "BE-A Applied Physics"
+        },
+        {
+          "period": 8,
+          "label": "SE-B Optics"
+        }
+      ],
+      "Thu": [
+        {
+          "period": 3,
+          "label": "SE-A Optics"
+        },
+        {
+          "period": 5,
+          "label": "FE-A Applied Physics"
+        },
+        {
+          "period": 6,
+          "label": "SE-B Optics"
+        }
+      ],
+      "Fri": [
+        {
+          "period": 1,
+          "label": "FE-B Optics"
+        },
+        {
+          "period": 6,
+          "label": "BE-B Applied Physics"
+        },
+        {
+          "period": 8,
+          "label": "SE-A Applied Physics"
+        }
+      ],
+      "Sat": [
+        {
+          "period": 6,
+          "label": "FE-B Applied Physics"
+        }
+      ]
+    }
+  },
+  {
+    "name": "Dr. Kavita Joshi",
+    "department": "CSE",
+    "schedule": {
+      "Mon": [
+        {
+          "period": 5,
+          "label": "SE-B Machine Learning"
+        },
+        {
+          "period": 8,
+          "label": "FE-A Machine Learning"
+        }
+      ],
+      "Tue": [
+        {
+          "period": 3,
+          "label": "BE-A Machine Learning"
+        },
+        {
+          "period": 4,
+          "label": "TE-B Machine Learning"
+        },
+        {
+          "period": 5,
+          "label": "BE-B Python"
+        },
+        {
+          "period": 7,
+          "label": "BE-A Machine Learning"
+        },
+        {
+          "period": 8,
+          "label": "SE-B Python"
+        }
+      ],
+      "Wed": [
+        {
+          "period": 1,
+          "label": "TE-A Machine Learning"
+        },
+        {
+          "period": 2,
+          "label": "TE-B Python"
+        }
+      ],
+      "Thu": [
+        {
+          "period": 1,
+          "label": "SE-A Machine Learning"
+        },
+        {
+          "period": 3,
+          "label": "BE-A Python"
+        },
+        {
+          "period": 6,
+          "label": "BE-B Python"
+        },
+        {
+          "period": 7,
+          "label": "FE-A Machine Learning"
+        }
+      ],
+      "Fri": [
+        {
+          "period": 8,
+          "label": "TE-A Python"
+        }
+      ],
+      "Sat": [
+        {
+          "period": 3,
+          "label": "BE-A Python"
+        },
+        {
+          "period": 4,
+          "label": "BE-B Python"
+        }
+      ]
+    }
+  },
+  {
+    "name": "Prof. Amit Verma",
+    "department": "IT",
+    "schedule": {
+      "Mon": [
+        {
+          "period": 1,
+          "label": "FE-B Cloud Computing"
+        },
+        {
+          "period": 2,
+          "label": "SE-A Web Technologies"
+        },
+        {
+          "period": 7,
+          "label": "SE-A Web Technologies"
+        }
+      ],
+      "Tue": [
+        {
+          "period": 8,
+          "label": "BE-B Web Technologies"
+        }
+      ],
+      "Wed": [
+        {
+          "period": 5,
+          "label": "FE-B Web Technologies"
+        },
+        {
+          "period": 6,
+          "label": "FE-A Cloud Computing"
+        },
+        {
+          "period": 7,
+          "label": "FE-A Cloud Computing"
+        },
+        {
+          "period": 8,
+          "label": "FE-B Web Technologies"
+        }
+      ],
+      "Thu": [
+        {
+          "period": 3,
+          "label": "BE-B Cloud Computing"
+        },
+        {
+          "period": 4,
+          "label": "TE-B Web Technologies"
+        }
+      ],
+      "Fri": [
+        {
+          "period": 2,
+          "label": "FE-B Web Technologies"
+        },
+        {
+          "period": 4,
+          "label": "BE-A Web Technologies"
+        },
+        {
+          "period": 5,
+          "label": "FE-B Web Technologies"
+        },
+        {
+          "period": 6,
+          "label": "SE-A Cloud Computing"
+        },
+        {
+          "period": 8,
+          "label": "FE-B Cloud Computing"
+        }
+      ],
+      "Sat": []
+    }
+  },
+  {
+    "name": "Dr. Sunita Rao",
+    "department": "Chemistry",
+    "schedule": {
+      "Mon": [
+        {
+          "period": 5,
+          "label": "SE-B Engineering Chemistry"
+        },
+        {
+          "period": 6,
+          "label": "SE-A Engineering Chemistry"
+        }
+      ],
+      "Tue": [
+        {
+          "period": 2,
+          "label": "TE-A Engineering Chemistry"
+        },
+        {
+          "period": 7,
+          "label": "TE-B Engineering Chemistry"
+        }
+      ],
+      "Wed": [
+        {
+          "period": 1,
+          "label": "SE-A Engineering Chemistry"
+        },
+        {
+          "period": 4,
+          "label": "FE-A Engineering Chemistry"
+        },
+        {
+          "period": 6,
+          "label": "FE-A Engineering Chemistry"
+        }
+      ],
+      "Thu": [
+        {
+          "period": 4,
+          "label": "SE-A Engineering Chemistry"
+        }
+      ],
+      "Fri": [
+        {
+          "period": 3,
+          "label": "SE-B Engineering Chemistry"
+        },
+        {
+          "period": 8,
+          "label": "TE-A Engineering Chemistry"
+        }
+      ],
+      "Sat": [
+        {
+          "period": 1,
+          "label": "SE-A Engineering Chemistry"
+        },
+        {
+          "period": 2,
+          "label": "FE-A Engineering Chemistry"
+        }
+      ]
+    }
+  },
+  {
+    "name": "Prof. Arjun Mehta",
+    "department": "ECE",
+    "schedule": {
+      "Mon": [
+        {
+          "period": 1,
+          "label": "SE-B Digital Electronics"
+        },
+        {
+          "period": 2,
+          "label": "FE-B Microprocessors"
+        },
+        {
+          "period": 3,
+          "label": "BE-A Digital Electronics"
+        },
+        {
+          "period": 7,
+          "label": "SE-B Digital Electronics"
+        }
+      ],
+      "Tue": [
+        {
+          "period": 1,
+          "label": "BE-A Microprocessors"
+        },
+        {
+          "period": 4,
+          "label": "BE-B Digital Electronics"
+        },
+        {
+          "period": 7,
+          "label": "FE-B Digital Electronics"
+        }
+      ],
+      "Wed": [
+        {
+          "period": 3,
+          "label": "TE-B Microprocessors"
+        }
+      ],
+      "Thu": [
+        {
+          "period": 6,
+          "label": "SE-A Digital Electronics"
+        },
+        {
+          "period": 7,
+          "label": "FE-B Microprocessors"
+        },
+        {
+          "period": 8,
+          "label": "SE-B Digital Electronics"
+        }
+      ],
+      "Fri": [
+        {
+          "period": 1,
+          "label": "TE-A Digital Electronics"
+        },
+        {
+          "period": 2,
+          "label": "BE-B Digital Electronics"
+        },
+        {
+          "period": 3,
+          "label": "BE-A Microprocessors"
+        },
+        {
+          "period": 6,
+          "label": "TE-B Microprocessors"
+        }
+      ],
+      "Sat": [
+        {
+          "period": 4,
+          "label": "FE-A Digital Electronics"
+        },
+        {
+          "period": 6,
+          "label": "BE-A Microprocessors"
+        }
+      ]
+    }
+  },
+  {
+    "name": "Dr. Neha Kapoor",
+    "department": "Humanities",
+    "schedule": {
+      "Mon": [
+        {
+          "period": 6,
+          "label": "TE-A Communication Skills"
+        }
+      ],
+      "Tue": [
+        {
+          "period": 5,
+          "label": "TE-B Ethics"
+        },
+        {
+          "period": 7,
+          "label": "BE-A Ethics"
+        },
+        {
+          "period": 8,
+          "label": "FE-B Ethics"
+        }
+      ],
+      "Wed": [
+        {
+          "period": 4,
+          "label": "BE-A Ethics"
+        },
+        {
+          "period": 6,
+          "label": "BE-A Ethics"
+        }
+      ],
+      "Thu": [
+        {
+          "period": 3,
+          "label": "FE-A Communication Skills"
+        },
+        {
+          "period": 4,
+          "label": "BE-A Communication Skills"
+        }
+      ],
+      "Fri": [
+        {
+          "period": 4,
+          "label": "SE-A Communication Skills"
+        },
+        {
+          "period": 6,
+          "label": "FE-B Ethics"
+        },
+        {
+          "period": 8,
+          "label": "FE-B Communication Skills"
+        }
+      ],
+      "Sat": [
+        {
+          "period": 6,
+          "label": "TE-B Communication Skills"
+        }
+      ]
+    }
+  },
+  {
+    "name": "Prof. Rohit Desai",
+    "department": "Civil",
+    "schedule": {
+      "Mon": [
+        {
+          "period": 4,
+          "label": "FE-B Structural Analysis"
+        },
+        {
+          "period": 5,
+          "label": "BE-A Structural Analysis"
+        },
+        {
+          "period": 6,
+          "label": "BE-B Structural Analysis"
+        }
+      ],
+      "Tue": [
+        {
+          "period": 1,
+          "label": "SE-B Surveying"
+        },
+        {
+          "period": 2,
+          "label": "FE-A Surveying"
+        },
+        {
+          "period": 3,
+          "label": "SE-B Surveying"
+        },
+        {
+          "period": 7,
+          "label": "FE-A Surveying"
+        }
+      ],
+      "Wed": [
+        {
+          "period": 1,
+          "label": "FE-A Structural Analysis"
+        },
+        {
+          "period": 2,
+          "label": "SE-A Surveying"
+        },
+        {
+          "period": 8,
+          "label": "TE-B Surveying"
+        }
+      ],
+      "Thu": [
+        {
+          "period": 2,
+          "label": "SE-A Structural Analysis"
+        },
+        {
+          "period": 6,
+          "label": "TE-B Surveying"
+        }
+      ],
+      "Fri": [
+        {
+          "period": 1,
+          "label": "FE-A Structural Analysis"
+        },
+        {
+          "period": 2,
+          "label": "BE-A Surveying"
+        },
+        {
+          "period": 6,
+          "label": "FE-B Surveying"
+        }
+      ],
+      "Sat": [
+        {
+          "period": 2,
+          "label": "TE-B Structural Analysis"
+        },
+        {
+          "period": 3,
+          "label": "FE-B Surveying"
+        },
+        {
+          "period": 8,
+          "label": "SE-A Structural Analysis"
+        }
+      ]
+    }
+  }
+]

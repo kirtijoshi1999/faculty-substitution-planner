@@ -1,6 +1,8 @@
 (function () {
-  const { DAYS, DAY_NAMES, PERIODS, dayKeyFromDate, toISO, weekStart, lecturesOn, weeklyLoad, rankSubstitutes } =
-    window.Logic;
+  const {
+    DAYS, DAY_NAMES, PERIODS, dayKeyFromDate, toISO, weekStart, lecturesOn, weeklyLoad, rankSubstitutes,
+    parseExemptList, matchExempt,
+  } = window.Logic;
   const STORAGE_KEY = 'faculty-substitution-planner-v1';
   const REASONS = {
     absent: 'Absent',
@@ -26,10 +28,12 @@
       days: {},
       settings: { maxDayLoad: 3, maxWeeklyLoad: null, periods: PERIODS },
       source: { type: 'sample' },
+      exempt: [],
     };
   }
 
   function migrate(s) {
+    s.exempt = s.exempt || [];
     s.settings = { maxDayLoad: 3, maxWeeklyLoad: null, periods: PERIODS, ...s.settings };
     s.source = s.source || { type: 'sample' };
     s.days = s.days || {};
@@ -104,8 +108,102 @@
     return state.faculty.find((f) => f.id === id);
   }
 
+  // ---- faculty who never take adjustments (HOD, COE, AD …) ------------------
+
+  const exemptMatch = () => matchExempt(state.faculty, state.exempt, window.PdfImport.normalizeName);
+
+  function exemptRoles() {
+    const { byId } = exemptMatch();
+    return Object.fromEntries(Object.entries(byId).map(([id, e]) => [id, e.role]));
+  }
+
+  function sameEntry(a, b) {
+    const n = window.PdfImport.normalizeName;
+    return (a.code && a.code === b.code) || (a.name && b.name && n(a.name) === n(b.name));
+  }
+
+  function addExempt(entries) {
+    let added = 0;
+    for (const e of entries) {
+      const existing = state.exempt.find((x) => sameEntry(x, e));
+      if (existing) {
+        if (e.role) existing.role = e.role;
+        if (e.code) existing.code = e.code;
+        if (e.name && !existing.name) existing.name = e.name;
+      } else {
+        state.exempt.push(e);
+        added++;
+      }
+    }
+    save();
+    render();
+    return added;
+  }
+
+  function renderExempt() {
+    const { byId, unmatched } = exemptMatch();
+    const label = (e) => e.name || e.code;
+    const matched = Object.entries(byId)
+      .map(([id, e]) => ({ f: facultyById(id), e }))
+      .sort((a, b) => a.f.name.localeCompare(b.f.name));
+    const indexOf = (e) => state.exempt.indexOf(e);
+    $('exemptChips').innerHTML =
+      matched
+        .map(
+          ({ f, e }) => `<span class="chip exempt">${esc(f.name)}${e.role ? ` <small>${esc(e.role)}</small>` : ''}
+            <button data-exempt-remove="${indexOf(e)}" title="Allow adjustments again">×</button></span>`
+        )
+        .join('') +
+      unmatched
+        .map(
+          (e) => `<span class="chip unmatched" title="Not found in the current timetable">${esc(label(e))}${
+            e.role ? ` <small>${esc(e.role)}</small>` : ''
+          } <small>· not in timetable</small>
+            <button data-exempt-remove="${indexOf(e)}" title="Remove">×</button></span>`
+        )
+        .join('') ||
+      `<span class="muted">No one yet — upload or add the HOD / COE / AD names.</span>`;
+
+    const options = state.faculty
+      .filter((f) => !byId[f.id])
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((f) => `<option value="${f.id}">${esc(f.name)}${f.code ? ` (${esc(f.code)})` : ''}</option>`);
+    $('exemptPick').innerHTML = `<option value="">— Choose faculty —</option>${options.join('')}`;
+    $('exemptDownloadBtn').disabled = $('exemptClearBtn').disabled = state.exempt.length === 0;
+  }
+
+  function uploadExempt(file) {
+    if (/\.xlsx?$/i.test(file.name)) {
+      alert('Excel files can’t be read directly. In Excel use File → Save As → CSV, then upload the .csv file.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const entries = parseExemptList(reader.result);
+      if (!entries.length) {
+        alert(`No names found in ${file.name}. Put one person per line: Name, Employee code, Role.`);
+        return;
+      }
+      addExempt(entries);
+      const { unmatched } = exemptMatch();
+      const missing = unmatched.filter((e) => entries.some((x) => sameEntry(x, e)));
+      alert(
+        `Added ${entries.length - missing.length} of ${entries.length} name(s) from ${file.name}.` +
+          (missing.length ? `\n\nNot found in the timetable (check spelling or add the employee code):\n${missing.map((e) => '• ' + (e.name || e.code)).join('\n')}` : '')
+      );
+    };
+    reader.readAsText(file);
+  }
+
+  function downloadExempt() {
+    const q = (s) => `"${String(s || '').replace(/"/g, '""')}"`;
+    const csv = ['Name,Emp Code,Role', ...state.exempt.map((e) => [e.name, e.code, e.role].map(q).join(','))].join('\r\n');
+    window.Sheet.download(new Blob(['\ufeff' + csv], { type: 'text/csv' }), 'no-adjustment-list.csv');
+  }
+
   function rank({ period = null, excludeKey = null } = {}) {
     return rankSubstitutes(state.faculty, {
+      exempt: exemptRoles(),
       day: dayKeyFromDate(currentDate),
       absentIds: unavailableIds(),
       adjustments: assignmentsFor(currentDate, excludeKey),
@@ -140,11 +238,13 @@
     renderUploadStatus();
     renderChecklist();
     renderChips(day);
+    renderExempt();
     renderAdjustments(day);
     updateClearButtons();
     renderSubstitutes(day);
     renderSchedule();
     renderFacultyTable();
+    if (window.RoomsUI) window.RoomsUI.render();
   }
 
   function renderUploadStatus(message, kind) {
@@ -165,6 +265,7 @@
   function renderChecklist() {
     const day = dayKeyFromDate(currentDate);
     const off = dayData().unavailable;
+    const roles = exemptRoles();
     const q = search.trim().toLowerCase();
     const list = state.faculty
       .filter((f) => !off[f.id])
@@ -178,7 +279,7 @@
             return `<label class="check-item ${checked ? 'checked' : ''}">
               <input type="checkbox" data-select="${f.id}" ${checked ? 'checked' : ''} />
               <span class="name" title="${esc(f.name)}">${esc(f.name)}</span>
-              <span class="meta">${esc(f.department)} · ${lecturesOn(f, day).length} today</span>
+              <span class="meta">${f.id in roles ? `<span class="badge plus">${esc(roles[f.id] || 'No adj.')}</span> ` : ''}${esc(f.department)} · ${lecturesOn(f, day).length} today</span>
             </label>`;
           })
           .join('')
@@ -273,62 +374,38 @@
 
   // ---- adjustment schedule (the shareable sheet) ---------------------------
 
-  function formatDate(iso) {
-    const [y, m, d] = iso.split('-');
-    return `${d}/${m}/${y}`;
-  }
+  const { formatDate } = window.Sheet;
 
-  function scheduleGroups() {
+  function scheduleSpec() {
     const { assignments } = dayData();
     const times = state.settings.periodTimes || [];
     const groups = new Map();
     for (const s of slotsToAdjust()) {
       const sub = facultyById(assignments[slotKey(s.absent.id, s.period)]);
       if (!sub) continue;
-      if (!groups.has(s.absent.id)) groups.set(s.absent.id, { name: s.absent.name, rows: [] });
-      groups.get(s.absent.id).rows.push({
-        by: sub.name,
-        className: s.className || s.label,
-        subject: s.subject || '',
-        time: times[s.period - 1] || `Period ${s.period}`,
-        room: s.room || '',
-      });
+      if (!groups.has(s.absent.id)) groups.set(s.absent.id, { label: s.absent.name, rows: [] });
+      groups.get(s.absent.id).rows.push([
+        sub.name,
+        s.className || s.label,
+        s.subject || '',
+        times[s.period - 1] || `Period ${s.period}`,
+        s.room || '',
+      ]);
     }
-    return [...groups.values()];
-  }
-
-  const SCHEDULE_HEADERS = ['Adjustment For', 'Adjusted By', 'Class', 'Subject', 'Time', 'Room No.'];
-  const scheduleTitle = () => `Adjustment Schedule: ${formatDate(currentDate)}`;
-
-  function scheduleTableHtml(groups, inlineStyles) {
-    const s = inlineStyles
-      ? {
-          th: ' style="background:#1f4e79;color:#fff;font-weight:bold;border:1px solid #9bb7d4;padding:6px 10px"',
-          td: (g, bold) => ` style="background:${g ? '#ffffff' : '#dce6f1'};border:1px solid #9bb7d4;padding:6px 10px;text-align:center;vertical-align:middle${bold ? ';font-weight:bold' : ''}"`,
-        }
-      : { th: '', td: (g, bold) => (bold ? ' class="for"' : '') };
-    const body = groups
-      .map((g, gi) =>
-        g.rows
-          .map((r, ri) => {
-            const cells = [r.by, r.className, r.subject, r.time, r.room].map((v) => `<td${s.td(gi % 2)}>${esc(v)}</td>`).join('');
-            const forCell = ri === 0 ? `<td rowspan="${g.rows.length}"${s.td(gi % 2, true)}>${esc(g.name)}</td>` : '';
-            return `<tr class="g${gi % 2}">${forCell}${cells}</tr>`;
-          })
-          .join('')
-      )
-      .join('');
-    return `<table class="sched"${inlineStyles ? ' border="1" style="border-collapse:collapse;font-family:Calibri,Arial,sans-serif"' : ''}>
-      <thead><tr>${SCHEDULE_HEADERS.map((h) => `<th${s.th}>${h}</th>`).join('')}</tr></thead>
-      <tbody>${body}</tbody></table>`;
+    return {
+      title: `Adjustment Schedule: ${formatDate(currentDate)}`,
+      headers: ['Adjustment For', 'Adjusted By', 'Class', 'Subject', 'Time', 'Room No.'],
+      groups: [...groups.values()],
+      fileName: `adjustment-schedule-${currentDate}`,
+    };
   }
 
   function renderSchedule() {
-    const groups = scheduleGroups();
+    const spec = scheduleSpec();
     const pending = slotsToAdjust().filter((s) => !dayData().assignments[slotKey(s.absent.id, s.period)]).length;
-    const hasRows = groups.length > 0;
+    const hasRows = spec.groups.length > 0;
     $('schedule').innerHTML = hasRows
-      ? `<div class="sheet"><h3>${esc(scheduleTitle())}</h3>${scheduleTableHtml(groups, false)}</div>`
+      ? window.Sheet.sheetHtml(spec)
       : `<div class="empty">Assign substitutes above and the adjustment schedule will appear here.</div>`;
     const notes = [];
     if (pending) notes.push(`${pending} lecture(s) still have no substitute and are not included yet.`);
@@ -337,103 +414,6 @@
     }
     $('scheduleNote').textContent = notes.join(' ');
     ['printScheduleBtn', 'excelScheduleBtn', 'imageScheduleBtn', 'copyScheduleBtn'].forEach((id) => ($(id).disabled = !hasRows));
-  }
-
-  function scheduleCanvas() {
-    const groups = scheduleGroups();
-    const rows = groups.flatMap((g, gi) => g.rows.map((r, ri) => ({ ...r, gi, first: ri === 0, span: g.rows.length, name: g.name })));
-    const scale = 2;
-    const fonts = { title: 'bold 22px Calibri, Arial, sans-serif', head: 'bold 15px Calibri, Arial, sans-serif', bold: 'bold 14px Calibri, Arial, sans-serif', cell: '14px Calibri, Arial, sans-serif' };
-    const ctx = document.createElement('canvas').getContext('2d');
-    const measure = (text, font) => ((ctx.font = font), ctx.measureText(text).width);
-    const colW = SCHEDULE_HEADERS.map((h, c) => {
-      let w = measure(h, fonts.head);
-      for (const r of rows) {
-        const v = [r.name, r.by, r.className, r.subject, r.time, r.room][c];
-        w = Math.max(w, measure(v, c === 0 ? fonts.bold : fonts.cell));
-      }
-      return Math.ceil(w + 36);
-    });
-    const titleH = 44, headH = 32, rowH = 30;
-    const width = colW.reduce((a, b) => a + b, 0);
-    const height = titleH + headH + rows.length * rowH;
-
-    const canvas = document.createElement('canvas');
-    canvas.width = width * scale;
-    canvas.height = height * scale;
-    const g = canvas.getContext('2d');
-    g.scale(scale, scale);
-    g.fillStyle = '#fff';
-    g.fillRect(0, 0, width, height);
-    g.textAlign = 'center';
-    g.textBaseline = 'middle';
-    g.fillStyle = '#000';
-    g.font = fonts.title;
-    g.fillText(scheduleTitle(), width / 2, titleH / 2);
-
-    const xs = colW.reduce((acc, w) => [...acc, acc[acc.length - 1] + w], [0]);
-    const cell = (x, y, w, h, bg, text, font, color = '#000') => {
-      g.fillStyle = bg;
-      g.fillRect(x, y, w, h);
-      g.strokeStyle = '#9bb7d4';
-      g.lineWidth = 1;
-      g.strokeRect(x + 0.5, y + 0.5, w, h);
-      g.fillStyle = color;
-      g.font = font;
-      g.fillText(text, x + w / 2, y + h / 2);
-    };
-    SCHEDULE_HEADERS.forEach((h, c) => cell(xs[c], titleH, colW[c], headH, '#1f4e79', h, fonts.head, '#fff'));
-    rows.forEach((r, i) => {
-      const y = titleH + headH + i * rowH;
-      const bg = r.gi % 2 ? '#ffffff' : '#dce6f1';
-      if (r.first) cell(xs[0], y, colW[0], rowH * r.span, bg, r.name, fonts.bold);
-      [r.by, r.className, r.subject, r.time, r.room].forEach((v, k) => cell(xs[k + 1], y, colW[k + 1], rowH, bg, v, fonts.cell));
-    });
-    return canvas;
-  }
-
-  function download(blob, filename) {
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  }
-
-  const scheduleFileName = (ext) => `adjustment-schedule-${currentDate}.${ext}`;
-
-  function downloadScheduleExcel() {
-    const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
-      <head><meta charset="UTF-8"></head><body>
-      <table><tr><td colspan="6" style="font-size:16pt;font-weight:bold;text-align:center">${esc(scheduleTitle())}</td></tr></table>
-      ${scheduleTableHtml(scheduleGroups(), true)}</body></html>`;
-    download(new Blob(['\ufeff' + html], { type: 'application/vnd.ms-excel' }), scheduleFileName('xls'));
-  }
-
-  function downloadScheduleImage() {
-    scheduleCanvas().toBlob((blob) => download(blob, scheduleFileName('png')), 'image/png');
-  }
-
-  function copyScheduleImage() {
-    const btn = $('copyScheduleBtn');
-    const done = (text) => {
-      btn.textContent = text;
-      setTimeout(() => (btn.textContent = 'Copy image'), 2000);
-    };
-    if (!navigator.clipboard || !window.ClipboardItem) {
-      done('Copy not supported — use Download image');
-      return;
-    }
-    const blob = new Promise((resolve) => scheduleCanvas().toBlob(resolve, 'image/png'));
-    navigator.clipboard
-      .write([new ClipboardItem({ 'image/png': blob })])
-      .then(() => done('Copied ✓ — paste in WhatsApp/email'))
-      .catch(() => done('Copy blocked — use Download image'));
-  }
-
-  function printSchedule() {
-    document.body.classList.add('print-schedule');
-    window.print();
   }
 
   function loadBar(value, max) {
@@ -902,6 +882,37 @@
     if (id) removeUnavailable(id);
   });
 
+  $('exemptFile').addEventListener('change', (e) => {
+    if (e.target.files[0]) uploadExempt(e.target.files[0]);
+    e.target.value = '';
+  });
+  $('exemptDownloadBtn').addEventListener('click', downloadExempt);
+  $('exemptClearBtn').addEventListener('click', () => {
+    if (!confirm(`Remove all ${state.exempt.length} name(s) from the no-adjustment list?`)) return;
+    state.exempt = [];
+    save();
+    render();
+  });
+  $('exemptAddBtn').addEventListener('click', () => {
+    const f = facultyById($('exemptPick').value);
+    if (!f) return;
+    addExempt([{ name: f.name, code: (f.code || '').toUpperCase(), role: $('exemptRole').value.trim() }]);
+    $('exemptRole').value = '';
+  });
+  $('exemptPasteBtn').addEventListener('click', () => {
+    const entries = parseExemptList($('exemptText').value);
+    if (!entries.length) return;
+    addExempt(entries);
+    $('exemptText').value = '';
+  });
+  $('exemptChips').addEventListener('click', (e) => {
+    const i = e.target.dataset.exemptRemove;
+    if (i == null) return;
+    state.exempt.splice(Number(i), 1);
+    save();
+    render();
+  });
+
   $('adjustments').addEventListener('change', (e) => {
     if (e.target.id === 'pickAll') {
       const { assignments } = dayData();
@@ -934,11 +945,10 @@
   $('autoAssignBtn').addEventListener('click', autoAssign);
   $('clearSelectedBtn').addEventListener('click', () => clearAssignments([...adjSelection]));
   $('clearAllBtn').addEventListener('click', clearAll);
-  $('printScheduleBtn').addEventListener('click', printSchedule);
-  $('excelScheduleBtn').addEventListener('click', downloadScheduleExcel);
-  $('imageScheduleBtn').addEventListener('click', downloadScheduleImage);
-  $('copyScheduleBtn').addEventListener('click', copyScheduleImage);
-  window.addEventListener('afterprint', () => document.body.classList.remove('print-schedule'));
+  $('printScheduleBtn').addEventListener('click', () => window.Sheet.print($('scheduleCard')));
+  $('excelScheduleBtn').addEventListener('click', () => window.Sheet.excel(scheduleSpec()));
+  $('imageScheduleBtn').addEventListener('click', () => window.Sheet.image(scheduleSpec()));
+  $('copyScheduleBtn').addEventListener('click', (e) => window.Sheet.copy(scheduleSpec(), e.target));
   $('maxDayLoad').addEventListener('change', (e) => {
     state.settings.maxDayLoad = Math.max(0, Number(e.target.value) || 0);
     save();
@@ -969,11 +979,19 @@
   });
   $('resetBtn').addEventListener('click', () => {
     if (!confirm('Replace all faculty, absences and adjustments with the sample data?')) return;
-    state = defaultState();
+    const { rooms, sections, roomBlocks, roomShifts, exempt } = state;
+    state = { ...defaultState(), rooms, sections, roomBlocks, roomShifts, exempt };
     selection.clear();
     save();
     render();
   });
+
+  window.App = {
+    get state() { return state; },
+    save,
+    render,
+    periodCount,
+  };
 
   render();
 })();

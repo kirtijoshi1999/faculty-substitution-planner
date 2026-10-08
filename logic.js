@@ -50,6 +50,7 @@
       maxWeeklyLoad = null,
       period = null,
       periods = PERIODS,
+      exempt = {}, // id -> role label (HOD, COE, …): never given adjustments
     } = opts;
     const absent = new Set(absentIds);
 
@@ -66,6 +67,7 @@
         for (let p = 1; p <= periods; p++) if (!busy.has(p)) freePeriods.push(p);
 
         const reasons = [];
+        if (f.id in exempt) reasons.push(`No adjustments${exempt[f.id] ? ` (${exempt[f.id]})` : ''}`);
         if (dayLoad > maxDayLoad) reasons.push(`${dayLoad} lectures today (max ${maxDayLoad})`);
         if (maxWeeklyLoad != null && weekLoad > maxWeeklyLoad) {
           reasons.push(`Weekly load ${weekLoad} (max ${maxWeeklyLoad})`);
@@ -91,9 +93,66 @@
     return rows;
   }
 
+  const CODE_CELL_RE = /^[A-Z]{1,4}\d{3,}$/i;
+  const HEADER_RE =
+    /^(s\.?\s*no\.?|sr\.?\s*no\.?|#|name|faculty(\s+name)?|emp(loyee)?\.?\s*(code|id|no\.?)|code|designation|role|post|position|department|dept\.?)$/i;
+  const ROLE_RE = /^(hod|h\.o\.d\.?|coe|ad|dean|director|registrar|principal|vc|pro[\s-]?vc|coordinator|warden|admin|head\b.*|associate dean|assistant dean)/i;
+
+  /**
+   * Reads a pasted or uploaded list (CSV / TXT, one person per line) of faculty who must never
+   * be given adjustments. A line can hold a name, an employee code and a role in any order,
+   * separated by commas, tabs or semicolons, e.g. "Dr. Shikha Sharma, E20303, HOD".
+   */
+  function parseExemptList(text) {
+    const out = [];
+    for (const raw of String(text || '').split(/\r?\n/)) {
+      let cells = raw.split(/[,\t;|]/).map((c) => c.replace(/^"|"$/g, '').trim()).filter(Boolean);
+      if (!cells.length || cells.every((c) => HEADER_RE.test(c))) continue;
+      if (cells.length === 1) {
+        // "Dr. A Sharma (E20303) - HOD"
+        const m = cells[0].match(/^(.*?)\s*(?:[-–:]\s*([A-Za-z .]{2,25}))?$/);
+        cells = [m[1], m[2]].filter(Boolean);
+        const code = cells[0].match(/[(\[]?\b([A-Z]{1,4}\d{3,})\b[)\]]?/i);
+        if (code) cells = [cells[0].replace(code[0], '').trim(), code[1], ...cells.slice(1)];
+      }
+      const code = cells.find((c) => CODE_CELL_RE.test(c)) || '';
+      const rest = cells.filter((c) => c !== code);
+      const role = rest.find((c) => ROLE_RE.test(c)) || '';
+      const nameCells = rest.filter((c) => c !== role && /[a-z]/i.test(c) && !/^\d+$/.test(c));
+      const name = nameCells.sort((a, b) => b.length - a.length)[0] || '';
+      if (!name && !code) continue;
+      out.push({ name, code: code.toUpperCase(), role });
+    }
+    return out;
+  }
+
+  /**
+   * Matches list entries to faculty by employee code, then exact name, then a unique partial
+   * name match. Returns { byId: { facultyId: entry }, unmatched: [entry] }.
+   */
+  function matchExempt(faculty, entries, normalizeName) {
+    const byId = {}, unmatched = [];
+    for (const e of entries) {
+      const n = normalizeName(e.name);
+      let f = e.code && faculty.find((x) => x.code && x.code.toUpperCase() === e.code);
+      if (!f && n) f = faculty.find((x) => normalizeName(x.name) === n);
+      if (!f && n.length >= 4) {
+        const partial = faculty.filter((x) => {
+          const m = normalizeName(x.name);
+          return m.length >= 4 && (m.includes(n) || n.includes(m));
+        });
+        if (partial.length === 1) f = partial[0];
+      }
+      if (f) byId[f.id] = e;
+      else unmatched.push(e);
+    }
+    return { byId, unmatched };
+  }
+
   const api = {
     DAYS, DAY_NAMES, PERIODS,
     dayKeyFromDate, toISO, weekStart, lecturesOn, weeklyLoad, rankSubstitutes,
+    parseExemptList, matchExempt,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Logic = api;

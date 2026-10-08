@@ -1,0 +1,267 @@
+[
+  {
+    "name": "Prof. Rajesh Kumar",
+    "department": "CSE",
+    "schedule": {
+      "Mon": [
+        {
+          "period": 2,
+          "label": "FE-B Networks"
+        },
+        {
+          "period": 4,
+          "label": "FE-A Operating Systems"
+        }
+      ],
+      "Tue": [
+        {
+          "period": 2,
+          "label": "FE-B Networks"
+        },
+        {
+          "period": 4,
+          "label": "FE-B Operating Systems"
+        },
+        {
+          "period": 5,
+          "label": "SE-B Operating Systems"
+        },
+        {
+          "period": 6,
+          "label": "BE-A Operating Systems"
+        }
+      ],
+      "Wed": [
+        {
+          "period": 5,
+          "label": "SE-B Operating Systems"
+        },
+        {
+          "period": 6,
+          "label": "SE-B Networks"
+        },
+        {
+          "period": 7,
+          "label": "TE-B Networks"
+        }
+      ],
+      "Thu": [
+        {
+          "period": 1,
+          "label": "SE-B Operating Systems"
+        },
+        {
+          "period": 2,
+          "label": "FE-A Operating Systems"
+        },
+        {
+          "period": 3,
+          "label": "TE-B Operating Systems"
+        },
+        {
+          "period": 5,
+          "label": "BE-A Networks"
+        }
+      ],
+      "Fri": [
+        {
+          "period": 5,
+          "label": "BE-A Operating Systems"
+        },
+        {
+          "period": 8,
+          "label": "SE-A Networks"
+        }
+      ],
+      "Sat": [
+        {
+          "period": 5,
+          "label": "TE-B Operating Systems"
+        },
+        {
+          "period": 8,
+          "label": "TE-B Operating Systems"
+        }
+      ]
+    }
+  },
+  {
+    "name": "Dr. Meera Iyer",
+    "department": "ECE",
+    "schedule": {
+      "Mon": [
+        {
+          "period": 1,
+          "label": "SE-A VLSI"
+        },
+        {
+          "period": 4,
+          "label": "FE-B Signals"
+        },
+        {
+          "period": 5,
+          "label": "FE-B VLSI"
+        }
+      ],
+      "Tue": [
+        {
+          "period": 3,
+          "label": "BE-B Signals"
+        },
+        {
+          "period": 4,
+          "label": "BE-B VLSI"
+        }
+      ],
+      "Wed": [
+        {
+          "period": 2,
+          "label": "TE-A VLSI"
+        },
+        {
+          "period": 3,
+          "label": "FE-B Signals"
+        }
+      ],
+      "Thu": [
+        {
+          "period": 1,
+          "label": "BE-B Signals"
+        },
+        {
+          "period": 2,
+          "label": "BE-B Signals"
+        },
+        {
+          "period": 3,
+          "label": "BE-A Signals"
+        }
+      ],
+      "Fri": [
+        {
+          "period": 5,
+          "label": "BE-A VLSI"
+        },
+        {
+          "period": 7,
+          "label": "FE-B VLSI"
+        },
+        {
+          "period": 8,
+          "label": "SE-A Signals"
+        }
+      ],
+      "Sat": []
+    }
+  },
+  {
+    "name": "Prof. Vikram Singh",
+    "department": "ME",
+    "schedule": {
+      "Mon": [
+        {
+          "period": 2,
+          "label": "FE-A Fluid Mechanics"
+        },
+        {
+          "period": 3,
+          "label": "SE-A Fluid Mechanics"
+        },
+        {
+          "period": 5,
+          "label": "TE-B Thermodynamics"
+        },
+        {
+          "period": 6,
+          "label": "TE-B Thermodynamics"
+        },
+        {
+          "period": 8,
+          "label": "BE-A Fluid Mechanics"
+        }
+      ],
+      "Tue": [
+        {
+          "period": 1,
+          "label": "BE-B Fluid Mechanics"
+        },
+        {
+          "period": 6,
+          "label": "SE-A Thermodynamics"
+        },
+        {
+          "period": 7,
+          "label": "BE-A Fluid Mechanics"
+        },
+        {
+          "period": 8,
+          "label": "BE-B Thermodynamics"
+        }
+      ],
+      "Wed": [
+        {
+          "period": 3,
+          "label": "SE-A Fluid Mechanics"
+        },
+        {
+          "period": 4,
+          "label": "BE-B Thermodynamics"
+        },
+        {
+          "period": 5,
+          "label": "BE-A Fluid Mechanics"
+        },
+        {
+          "period": 8,
+          "label": "FE-A Fluid Mechanics"
+        }
+      ],
+      "Thu": [
+        {
+          "period": 1,
+          "label": "BE-A Fluid Mechanics"
+        },
+        {
+          "period": 2,
+          "label": "BE-B Thermodynamics"
+        },
+        {
+          "period": 3,
+          "label": "TE-A Fluid Mechanics"
+        },
+        {
+          "period": 6,
+          "label": "TE-A Thermodynamics"
+        },
+        {
+          "period": 8,
+          "label": "FE-B Thermodynamics"
+        }
+      ],
+      "Fri": [
+        {
+          "period": 1,
+          "label": "FE-B Thermodynamics"
+        },
+        {
+          "period": 3,
+          "label": "SE-A Thermodynamics"
+        },
+        {
+          "period": 8,
+          "label": "FE-B Thermodynamics"
+        }
+      ],
+      "Sat": [
+        {
+          "period": 3,
+          "label": "TE-A Fluid Mechanics"
+        },
+        {
+          "period": 4,
+          "label": "BE-A Fluid Mechanics"
+        }
+      ]
+    }
+  }
+]
