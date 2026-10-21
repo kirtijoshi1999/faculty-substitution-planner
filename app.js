@@ -14,12 +14,28 @@
   const esc = (s) =>
     String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
+  // What's on screen (date, ticked names, form fields) survives a page refresh. A date that has
+  // already passed falls back to today.
+  const UI_KEY = STORAGE_KEY + '-ui';
+  const ui = (() => {
+    try {
+      return JSON.parse(localStorage.getItem(UI_KEY)) || {};
+    } catch (_) {
+      return {};
+    }
+  })();
+  function saveUi(patch) {
+    Object.assign(ui, patch);
+    localStorage.setItem(UI_KEY, JSON.stringify(ui));
+  }
+  const today = toISO(new Date());
+
   let state = load();
-  let currentDate = toISO(new Date());
+  let currentDate = ui.date && ui.date >= today ? ui.date : today;
   let editingId = null;
-  let selection = new Set();
+  let selection = new Set((ui.selection || []).filter((id) => state.faculty.some((f) => f.id === id)));
   let adjSelection = new Set();
-  let search = '';
+  let search = ui.search || '';
   let pendingImport = null;
 
   function defaultState() {
@@ -204,6 +220,7 @@
   function rank({ period = null, excludeKey = null } = {}) {
     return rankSubstitutes(state.faculty, {
       exempt: exemptRoles(),
+      repeat: state.settings.repeat || 'last',
       day: dayKeyFromDate(currentDate),
       absentIds: unavailableIds(),
       adjustments: assignmentsFor(currentDate, excludeKey),
@@ -234,6 +251,7 @@
     $('maxDayLoad').value = state.settings.maxDayLoad;
     $('maxWeeklyLoad').value = state.settings.maxWeeklyLoad ?? '';
     $('periodsPerDay').value = periodCount();
+    $('repeatMode').value = state.settings.repeat || 'last';
 
     renderUploadStatus();
     renderChecklist();
@@ -287,6 +305,7 @@
 
     $('selectedCount').textContent = selection.size ? `${selection.size} selected` : 'Tick one or more faculty';
     $('markSelectedBtn').disabled = selection.size === 0;
+    saveUi({ date: currentDate, selection: [...selection], search });
   }
 
   function renderChips(day) {
@@ -327,7 +346,9 @@
       const options = candidates.map(
         (r, i) =>
           `<option value="${r.faculty.id}" ${r.faculty.id === current ? 'selected' : ''}>
-            ${i === 0 ? '★ ' : ''}${esc(r.faculty.name)} — ${r.dayLoad} today, ${r.weeklyLoad}/week</option>`
+            ${i === 0 ? '★ ' : ''}${esc(r.faculty.name)} — ${r.dayLoad} today, ${r.weeklyLoad}/week${
+              r.adjToday ? ` · already ${r.adjToday} adj. today` : ''
+            }</option>`
       );
       // Keep a stale assignment visible so the user can see and clear it.
       if (current && !candidates.some((r) => r.faculty.id === current)) {
@@ -454,7 +475,9 @@
             .map(
               (r, i) => `<tr>
                 <td><span class="rank ${i === 0 ? 'top' : ''}">${i + 1}</span></td>
-                <td><strong>${esc(r.faculty.name)}</strong></td>
+                <td><strong>${esc(r.faculty.name)}</strong>${
+                  r.adjToday ? ` <span class="badge plus" title="Already given an adjustment today">${r.adjToday} adj. today</span>` : ''
+                }</td>
                 <td>${esc(r.faculty.department)}</td>
                 <td><div class="load">${loadBar(r.dayLoad, periodCount())} ${r.dayLoad} / ${maxDayLoad}</div></td>
                 <td><div class="load">${loadBar(r.weeklyLoad, maxWeek)} ${r.weeklyLoad}</div></td>
@@ -815,6 +838,9 @@
   $('reasonSelect').innerHTML = Object.entries(REASONS)
     .map(([value, label]) => `<option value="${value}">${label}</option>`)
     .join('');
+  if (ui.reason in REASONS) $('reasonSelect').value = ui.reason;
+  $('reasonSelect').addEventListener('change', (e) => saveUi({ reason: e.target.value }));
+  $('facultySearch').value = search;
 
   $('pdfInput').addEventListener('change', (e) => {
     handlePdf(e.target.files[0]);
@@ -959,6 +985,11 @@
     save();
     render();
   });
+  $('repeatMode').addEventListener('change', (e) => {
+    state.settings.repeat = e.target.value;
+    save();
+    render();
+  });
   $('periodsPerDay').addEventListener('change', (e) => {
     state.settings.periods = Math.min(12, Math.max(1, Number(e.target.value) || PERIODS));
     save();
@@ -991,6 +1022,7 @@
     save,
     render,
     periodCount,
+    ui: { get: (key) => ui[key], set: (key, value) => saveUi({ [key]: value }) },
   };
 
   render();

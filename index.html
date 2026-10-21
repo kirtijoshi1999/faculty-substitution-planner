@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Faculty Substitution Planner</title>
-  <link rel="stylesheet" href="styles.css?v=13" />
+  <link rel="stylesheet" href="styles.css?v=14" />
 </head>
 <body>
   <header class="app-header">
@@ -201,8 +201,16 @@
             <span>Periods per day</span>
             <input type="number" id="periodsPerDay" min="1" max="12" />
           </label>
+          <label class="field">
+            <span>Already given an adjustment today</span>
+            <select id="repeatMode">
+              <option value="last">Consider last (others first)</option>
+              <option value="exclude">Don’t consider</option>
+              <option value="normal">Treat like everyone else</option>
+            </select>
+          </label>
         </div>
-        <p class="hint">Eligible substitutes have at most the max lectures on the selected day (including adjustments already assigned) and are free in that period. They're ranked by that day's load first, then by weekly load.</p>
+        <p class="hint">Eligible substitutes have at most the max lectures on the selected day (including adjustments already assigned) and are free in that period. They're ranked by that day's load first, then by weekly load. Faculty who already got an adjustment that day go to the end of the list (or are left out), so the second round of adjustments goes to someone new.</p>
       </details>
     </section>
 
@@ -330,12 +338,12 @@
 
   <script src="vendor/pdf.min.js"></script>
   <script src="vendor/pdf.worker.min.js"></script>
-  <script src="logic.js?v=13"></script>
-  <script src="data.js?v=13"></script>
-  <script src="pdf-import.js?v=13"></script>
-  <script src="sheet.js?v=13"></script>
-  <script src="room-logic.js?v=13"></script>
-  <script src="app.js?v=13"></script>
-  <script src="rooms.js?v=13"></script>
+  <script src="logic.js?v=14"></script>
+  <script src="data.js?v=14"></script>
+  <script src="pdf-import.js?v=14"></script>
+  <script src="sheet.js?v=14"></script>
+  <script src="room-logic.js?v=14"></script>
+  <script src="app.js?v=14"></script>
+  <script src="rooms.js?v=14"></script>
 </body>
 </html>

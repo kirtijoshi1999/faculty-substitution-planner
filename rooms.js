@@ -129,6 +129,7 @@
     const list = lectures(occ);
     renderShifts(occ, list);
     renderSchedule(list);
+    saveForm();
   }
 
   function renderVacancy(occ) {
@@ -479,6 +480,7 @@
   document.querySelectorAll('[data-tab-btn]').forEach((b) =>
     b.addEventListener('click', () => {
       history.replaceState(null, '', b.dataset.tabBtn === 'rooms' ? '#rooms' : location.pathname + location.search);
+      App.ui.set('tab', b.dataset.tabBtn);
       renderTabs();
     })
   );
@@ -594,6 +596,46 @@
   $('imageShiftBtn').addEventListener('click', () => window.Sheet.image(currentSpec()));
   $('copyShiftBtn').addEventListener('click', (e) => window.Sheet.copy(currentSpec(), e.target));
 
+  // ---- keep the form as it was across page refreshes -----------------------
+
+  const FORM_IDS = ['vacDate', 'vacScope', 'vacPFrom', 'vacPTo', 'blockFrom', 'blockTo', 'blockScope', 'blockPFrom',
+    'blockPTo', 'blockTarget', 'blockReason', 'roomSearch'];
+  const DATE_IDS = ['vacDate', 'blockFrom', 'blockTo'];
+  let restored = false;
+
+  function saveForm() {
+    if (!restored) return;
+    App.ui.set('rooms', {
+      ...Object.fromEntries(FORM_IDS.map((id) => [id, $(id).value])),
+      roomSel: [...roomSel],
+      scheduleDate,
+    });
+  }
+
+  function restoreForm() {
+    const saved = App.ui.get('rooms');
+    if (saved) {
+      for (const id of FORM_IDS) {
+        if (saved[id] == null) continue;
+        $(id).value = DATE_IDS.includes(id) && saved[id] < today ? today : saved[id];
+      }
+      if ($('blockTo').value < $('blockFrom').value) $('blockTo').value = $('blockFrom').value;
+      roomSearch = $('roomSearch').value;
+      roomSel = new Set(saved.roomSel || []);
+      if (saved.scheduleDate) scheduleDate = saved.scheduleDate;
+    }
+    restored = true;
+  }
+
+  document.querySelectorAll('[data-tab="rooms"]').forEach((section) => {
+    section.addEventListener('change', () => setTimeout(saveForm));
+    section.addEventListener('input', () => setTimeout(saveForm));
+  });
+
+  if (!location.hash && App.ui.get('tab') === 'rooms') history.replaceState(null, '', '#rooms');
+
   window.RoomsUI = { render };
+  render();
+  restoreForm();
   render();
 })();

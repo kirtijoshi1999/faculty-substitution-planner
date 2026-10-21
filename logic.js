@@ -38,7 +38,8 @@
    * weekAdjustments: substitutions assigned anywhere in the same week (counted in weekly load)
    * period:          when given, the faculty member must also be free in that period
    *
-   * Sorted by day load, then weekly load, then name.
+   * Sorted by adjustments already given that day (unless repeat = 'normal'), then day load,
+   * then weekly load, then name.
    */
   function rankSubstitutes(faculty, opts) {
     const {
@@ -51,6 +52,9 @@
       period = null,
       periods = PERIODS,
       exempt = {}, // id -> role label (HOD, COE, …): never given adjustments
+      // Faculty who already have an adjustment that day: 'last' ranks them after everyone else,
+      // 'exclude' leaves them out, 'normal' treats the adjustment like any other lecture.
+      repeat = 'last',
     } = opts;
     const absent = new Set(absentIds);
 
@@ -73,9 +77,11 @@
           reasons.push(`Weekly load ${weekLoad} (max ${maxWeeklyLoad})`);
         }
         if (period != null && busy.has(period)) reasons.push(`Busy in period ${period}`);
+        if (repeat === 'exclude' && extra.length) reasons.push(`Already has ${extra.length} adjustment(s) today`);
 
         return {
           faculty: f,
+          adjToday: extra.length,
           dayLoad,
           weeklyLoad: weekLoad,
           freePeriods,
@@ -86,6 +92,7 @@
 
     rows.sort(
       (a, b) =>
+        (repeat === 'normal' ? 0 : a.adjToday - b.adjToday) ||
         a.dayLoad - b.dayLoad ||
         a.weeklyLoad - b.weeklyLoad ||
         a.faculty.name.localeCompare(b.faculty.name)
